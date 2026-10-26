@@ -118,3 +118,77 @@ export function buildChatPrompt(
     `New question from the student: ${question}`,
   ].join("\n");
 }
+
+/**
+ * Build the flashcard-generation prompt.
+ *
+ * Asks the model for a strict JSON array of {front, back} flashcards covering
+ * the key concepts of the lecture. The front is a concise prompt/term/question;
+ * the back is a precise, university-level answer using correct terminology.
+ * The output is parsed and validated by {@link parseFlashcards} before any row
+ * is persisted, so we insist on raw JSON with no prose or code fences.
+ */
+export function buildFlashcardPrompt(context: string, count = 12): string {
+  return [
+    `Create up to ${count} study flashcards from the following Food Technology`,
+    "lecture material. Each flashcard must test one important concept, term,",
+    "process, mechanism, or numeric value that actually appears in the material.",
+    "",
+    "Flashcard quality rules:",
+    "- The 'front' is a concise prompt: a term to define, a question, or 'What is ...?'.",
+    "- The 'back' is a precise, university/major-level answer using correct Food",
+    "  Technology terminology. Do NOT simplify or dumb down. Keep each back focused",
+    "  (roughly 1-3 sentences) but technically complete.",
+    "- Cover the material broadly; do not create near-duplicate cards.",
+    "- Base every card ONLY on the material below. Do not invent facts.",
+    "",
+    "Output format (STRICT):",
+    "- Return ONLY a JSON array. No prose, no explanation, no Markdown code fences.",
+    '- Each element is an object with exactly two string keys: "front" and "back".',
+    '- Example: [{"front":"What is water activity (aw)?","back":"..."}]',
+    "",
+    "Lecture material (the ONLY source you may use):",
+    "-----",
+    context,
+    "-----",
+  ].join("\n");
+}
+
+/**
+ * Build the exercise/question-generation prompt.
+ *
+ * Asks the model for a strict JSON array of practice questions: multiple-choice
+ * (`type:"mcq"` with an `options` array including the correct answer) and
+ * short-answer (`type:"short"`). The output is parsed and validated by
+ * {@link parseExercises} before persisting.
+ */
+export function buildExercisePrompt(context: string, count = 10): string {
+  return [
+    `Create up to ${count} practice exam questions from the following Food`,
+    "Technology lecture material. Mix multiple-choice and short-answer questions.",
+    "",
+    "Question quality rules:",
+    "- Test genuine understanding of concepts, processes, mechanisms, and numeric",
+    "  values that appear in the material, at university/major level. Do NOT dumb down.",
+    "- Multiple-choice questions ('mcq'): provide 3-5 plausible 'options' and set",
+    "  'answer' to EXACTLY one of those option strings (verbatim).",
+    "- Short-answer questions ('short'): 'answer' is a concise correct answer (a term,",
+    "  short phrase, or value) that can be matched case-insensitively. Omit 'options'.",
+    "- Base every question and answer ONLY on the material below. Do not invent facts.",
+    "",
+    "Output format (STRICT):",
+    "- Return ONLY a JSON array. No prose, no explanation, no Markdown code fences.",
+    "- Each element is an object with keys:",
+    '    "type": "mcq" or "short",',
+    '    "question": string,',
+    '    "answer": string,',
+    '    "options": array of strings (REQUIRED for mcq, omit for short).',
+    '- Example: [{"type":"mcq","question":"...","answer":"HTST","options":["HTST","UHT","LTLT","Batch"]},',
+    '            {"type":"short","question":"Define the z-value.","answer":"..."}]',
+    "",
+    "Lecture material (the ONLY source you may use):",
+    "-----",
+    context,
+    "-----",
+  ].join("\n");
+}
