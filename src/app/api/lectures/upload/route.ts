@@ -7,6 +7,17 @@ import { parsePptx, PptxParseError } from "@/lib/pptx";
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 /**
+ * Maximum number of slides we will persist from a single deck.
+ *
+ * The whole file is read into memory (bounded by MAX_FILE_BYTES) and parsed in
+ * the request, which is fine for ordinary lecture decks. This cap is a sane
+ * upper bound so a pathological deck with thousands of slides cannot create an
+ * unbounded number of Slide rows. A normal Food Technology lecture is well
+ * under this.
+ */
+const MAX_SLIDES = 500;
+
+/**
  * Upload a lecture deck (.pptx) into a subject.
  *
  * Flow: require auth -> validate the subject belongs to the user -> validate
@@ -92,6 +103,14 @@ export async function POST(req: NextRequest) {
         ? err.message
         : "Could not parse the presentation.";
     return redirectWithError(req, "/library", message);
+  }
+
+  if (parsed.slideCount > MAX_SLIDES) {
+    return redirectWithError(
+      req,
+      "/library",
+      `This deck has ${parsed.slideCount} slides, which exceeds the ${MAX_SLIDES}-slide limit. Please split it into smaller lectures and upload them separately.`
+    );
   }
 
   // Derive a title: use the provided one, else the file name without extension.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession, registerUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@/generated/prisma";
 import { credentialsSchema, firstError } from "@/lib/validation";
 
 /**
@@ -32,7 +33,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const user = await registerUser(parsed.data.email, parsed.data.password);
+  // The findUnique pre-check above is best-effort: two near-simultaneous
+  // signups with the same email can both pass it and then race the DB's unique
+  // constraint on User.email. Wrap the write so the Prisma P2002 (unique
+  // constraint) maps back to the friendly "already exists" redirect instead of
+  // surfacing as a 500, and so any other transient DB error degrades to a
+  // generic, retry-able message.
+  let user;
+  try {
+    user = await registerUser(parsed.data.email, parsed.data.password);
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return redirectWithError(
+        req,
+        "/register",
+        "An account with that email already exists."
+      );
+    }
+    return redirectWithError(
+      req,
+      "/register",
+      "Could not create your account. Please try again."
+    );
+  }
+
   await createSession(user.id);
   return NextResponse.redirect(new URL("/library", req.url), { status: 303 });
 }

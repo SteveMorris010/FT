@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 import { gradeExam, type ExamQuestion } from "@/lib/exam";
 
 /**
@@ -51,7 +52,7 @@ export async function POST(
   }
 
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     select: { id: true },
   });
   if (!lecture) {
@@ -69,6 +70,13 @@ export async function POST(
       { status: 400 }
     );
   }
+
+  // Grading runs over stored exercises by id. If the lecture's exercises were
+  // regenerated while this exam was open (regenerate deletes and recreates the
+  // rows), some submitted ids no longer exist and would be silently dropped
+  // from grading. Detect that and report it so the UI can warn the student
+  // their score was computed over fewer questions than they sat.
+  const missingCount = body.questionIds.length - rows.length;
 
   // Preserve the client's presentation order where possible.
   const byId = new Map(rows.map((r) => [r.id, r]));
@@ -102,6 +110,9 @@ export async function POST(
     score: result.score,
     total: result.total,
     feedback: result.feedback,
+    // Number of questions that were on the exam but no longer exist (e.g. the
+    // question set was regenerated mid-exam). 0 in the normal case.
+    missingCount,
   });
 }
 

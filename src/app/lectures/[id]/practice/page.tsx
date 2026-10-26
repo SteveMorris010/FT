@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 import { isAIConfigured } from "@/lib/ai/provider";
 import { buildSlideContext, hasEnoughText } from "@/lib/ai/prompts";
 import PracticeClient, { type PracticeExercise } from "./PracticeClient";
@@ -19,7 +20,7 @@ export default async function PracticePage({
   const { id } = await params;
 
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     include: {
       slides: { orderBy: { index: "asc" } },
       flashcards: { orderBy: { createdAt: "asc" } },

@@ -19,10 +19,27 @@ import type { User } from "@/generated/prisma";
 const SESSION_COOKIE = "ft_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
+/** Dev-only fallback secret. Never used when NODE_ENV === "production". */
+const DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me";
+
 function getSecret(): string {
-  // A dev fallback keeps the app booting without configuration. Production
-  // deployments should always set AUTH_SECRET.
-  return process.env.AUTH_SECRET || "dev-insecure-secret-change-me";
+  const configured = process.env.AUTH_SECRET;
+  if (configured && configured.length > 0) {
+    return configured;
+  }
+  // Fail CLOSED in production: refusing to sign/verify with a publicly known
+  // string is safer than silently minting forgeable sessions. A session is a
+  // stateless HMAC of the userId, so a known secret means full account
+  // takeover for any user. In development we keep a fallback so the app boots
+  // without configuration.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "AUTH_SECRET is not set. Refusing to sign or verify sessions with an " +
+        "insecure fallback in production. Set AUTH_SECRET to a long random " +
+        "value (for example: `openssl rand -hex 32`)."
+    );
+  }
+  return DEV_FALLBACK_SECRET;
 }
 
 function sign(value: string): string {

@@ -240,6 +240,31 @@ tests/                      Vitest unit tests (pptx parsing, AI fallback,
 - **Local, single-user-friendly storage.** Data lives in a local SQLite file
   (`prisma/dev.db`). It is great for one student on one machine but is not set up
   for large multi-user or production hosting.
+- **Short-answer grading is lenient-exact, not partial credit.** When you sit a
+  timed exam, multiple-choice is scored on the exact option you select. Short
+  answers are compared after normalizing case, spacing, and punctuation (so
+  "D-value", "d value", and "D VALUE." all match), but the normalized answer
+  must still equal the stored answer as a whole. There is no partial credit and
+  a correct answer phrased differently (extra words, synonyms) can be marked
+  wrong. Use the per-question feedback, which always shows the model answer, to
+  judge borderline cases yourself.
+- **Regenerating questions during an open exam.** An exam is scored on the
+  server against the lecture's stored questions by id. If you regenerate the
+  question set in another tab while an exam is open, the old questions are
+  replaced and the ones you were sitting no longer exist. The app does not
+  silently ignore this: your score is computed over the questions that still
+  exist and the results screen shows a note telling you how many could not be
+  graded. Start a fresh exam after regenerating for an accurate result.
+- **Decks are parsed fully in memory with a size and slide cap.** An upload is
+  read into memory and parsed in the request. Uploads are capped at 25 MB and
+  500 slides, which comfortably covers ordinary lecture decks; split anything
+  larger into separate lectures.
+- **Set `AUTH_SECRET` before deploying.** Sessions are signed with
+  `AUTH_SECRET`. In development the app falls back to a built-in value so it
+  boots with zero configuration, but in production (`NODE_ENV=production`) it
+  refuses to start a session unless you set a real `AUTH_SECRET` (for example
+  `openssl rand -hex 32`). This is intentional: a known secret would let anyone
+  forge a session, so the app fails closed rather than ship an insecure default.
 
 ---
 

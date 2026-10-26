@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 import { isAIConfigured } from "@/lib/ai/provider";
 import { buildSlideContext, hasEnoughText } from "@/lib/ai/prompts";
 import AiNotConfigured from "@/components/AiNotConfigured";
@@ -20,7 +21,7 @@ export default async function SummarizePage({
   const { id } = await params;
 
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     include: {
       summary: true,
       slides: { orderBy: { index: "asc" } },

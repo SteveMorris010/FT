@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 import { AINotConfiguredError, generateText } from "@/lib/ai/provider";
 import {
   STUDY_SYSTEM,
@@ -54,7 +55,7 @@ export async function POST(
   }
 
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     include: { slides: { orderBy: { index: "asc" } } },
   });
 

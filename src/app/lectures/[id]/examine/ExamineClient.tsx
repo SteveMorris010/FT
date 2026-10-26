@@ -53,6 +53,7 @@ export default function ExamineClient({
     feedback: QuestionFeedback[];
     durationSeconds: number;
     saved: boolean;
+    missingCount: number;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -78,6 +79,7 @@ export default function ExamineClient({
         feedback: local.feedback,
         durationSeconds,
         saved: false,
+        missingCount: 0,
       };
 
       try {
@@ -98,6 +100,8 @@ export default function ExamineClient({
             feedback: data.feedback,
             durationSeconds,
             saved: true,
+            missingCount:
+              typeof data.missingCount === "number" ? data.missingCount : 0,
           };
         }
       } catch {
@@ -356,6 +360,7 @@ function ExamResultView({
     feedback: QuestionFeedback[];
     durationSeconds: number;
     saved: boolean;
+    missingCount: number;
   };
   onRestart: () => void;
 }) {
@@ -379,6 +384,15 @@ function ExamResultView({
             ? "This attempt has been saved."
             : "This attempt was graded locally but could not be saved."}
         </p>
+        {result.missingCount > 0 ? (
+          <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+            Note: {result.missingCount} question
+            {result.missingCount === 1 ? "" : "s"} from this exam could not be
+            graded because the lecture&apos;s question set was regenerated while
+            the exam was open. Your score was computed over the remaining
+            questions. Start a fresh exam for an accurate result.
+          </p>
+        ) : null}
         <div>
           <button
             type="button"

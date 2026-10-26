@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 
 export const metadata = { title: "Lecture - FoodTech Study" };
 
@@ -25,7 +26,7 @@ export default async function LecturePage({
   // Scope the lookup to the current user via the subject relation so users
   // cannot read each other's lectures.
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     include: {
       subject: { select: { name: true } },
       slides: { orderBy: { index: "asc" } },

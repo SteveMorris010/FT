@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { lectureOwnershipWhere } from "@/lib/lectures";
 import type { ExamQuestion } from "@/lib/exam";
 import ExamineClient from "./ExamineClient";
 
@@ -18,7 +19,7 @@ export default async function ExaminePage({
   const { id } = await params;
 
   const lecture = await prisma.lecture.findFirst({
-    where: { id, subject: { userId: user.id } },
+    where: lectureOwnershipWhere(id, user.id),
     include: {
       exercises: { orderBy: { createdAt: "asc" } },
     },
@@ -49,6 +50,13 @@ export default async function ExaminePage({
         <p className="text-sm text-foreground/60">
           Take a timed mock exam over this lecture&apos;s questions. The timer,
           scoring, and feedback all work offline once questions exist.
+        </p>
+        <p className="text-xs text-foreground/40">
+          Grading note: multiple-choice is scored on the exact option you pick.
+          Short answers are matched leniently (case, spacing, and punctuation
+          are ignored) but must match the stored answer as a whole, so there is
+          no partial credit and reworded answers may be marked wrong. Use the
+          per-question feedback to compare against the model answer.
         </p>
       </div>
 
