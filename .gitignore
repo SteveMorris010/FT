@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next
+/out
+
+# production
+/build
+
+# prisma / sqlite
+prisma/dev.db
+prisma/dev.db-journal
+dev.db
+dev.db-journal
+
+# generated prisma client
+/src/generated
+
+# env
+.env
+.env*.local
+
+# misc
+*.pem
+.DS_Store
+npm-debug.log*
+*.tsbuildinfo

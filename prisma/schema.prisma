@@ -1,0 +1,144 @@
+// Prisma schema for the Food Technology study platform.
+// Datasource is SQLite so the app runs anywhere with zero external services.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A registered user of the platform.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  subjects     Subject[]
+  examAttempts ExamAttempt[]
+  chatMessages ChatMessage[]
+}
+
+/// A subject/course the user studies (e.g. "Food Chemistry").
+model Subject {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lectures Lecture[]
+
+  @@index([userId])
+}
+
+/// A single lecture, usually uploaded as a PPT/PPTX file.
+model Lecture {
+  id               String   @id @default(cuid())
+  subjectId        String
+  title            String
+  originalFileName String
+  slideCount       Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  subject      Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  slides       Slide[]
+  summary      Summary?
+  flashcards   Flashcard[]
+  exercises    Exercise[]
+  examAttempts ExamAttempt[]
+  chatMessages ChatMessage[]
+
+  @@index([subjectId])
+}
+
+/// Extracted text for a single slide of a lecture.
+model Slide {
+  id        String @id @default(cuid())
+  lectureId String
+  index     Int
+  text      String
+
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@index([lectureId])
+}
+
+/// A generated summary (markdown) for a lecture. One per lecture.
+model Summary {
+  id        String   @id @default(cuid())
+  lectureId String   @unique
+  content   String
+  createdAt DateTime @default(now())
+
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+}
+
+/// A flashcard (front/back) generated for a lecture.
+model Flashcard {
+  id        String   @id @default(cuid())
+  lectureId String
+  front     String
+  back      String
+  createdAt DateTime @default(now())
+
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@index([lectureId])
+}
+
+/// A practice/exam question for a lecture.
+/// `type` is e.g. "mcq" or "short". `options` is a JSON-encoded string.
+model Exercise {
+  id        String   @id @default(cuid())
+  lectureId String
+  type      String
+  question  String
+  answer    String
+  options   String? // JSON-encoded array of choices (null for non-MCQ)
+  createdAt DateTime @default(now())
+
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@index([lectureId])
+}
+
+/// A recorded exam attempt with score and per-question detail.
+/// `detail` is a JSON-encoded string.
+model ExamAttempt {
+  id              String   @id @default(cuid())
+  userId          String
+  lectureId       String
+  score           Int
+  totalQuestions  Int
+  durationSeconds Int
+  detail          String // JSON-encoded breakdown
+  createdAt       DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([lectureId])
+}
+
+/// A chat message in the "Understand" conversation about a lecture.
+/// `role` is "user" or "assistant".
+model ChatMessage {
+  id        String   @id @default(cuid())
+  lectureId String
+  userId    String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lectureId])
+  @@index([userId])
+}
