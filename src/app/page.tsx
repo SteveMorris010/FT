@@ -1,24 +1,26 @@
 import Link from "next/link";
 
+// Each mode runs on a lecture you have uploaded, so every card links to the
+// library where you choose a subject and lecture first.
 const MODES = [
   {
     title: "Summarize",
-    href: "/summarize",
+    href: "/library",
     body: "Turn a lecture deck into a structured, university-level summary you can revise from quickly.",
   },
   {
     title: "Understand",
-    href: "/understand",
+    href: "/library",
     body: "Ask questions about a lecture and get precise, terminology-correct explanations grounded in its slides.",
   },
   {
     title: "Practice",
-    href: "/practice",
+    href: "/library",
     body: "Generate flashcards and exercises from your material, then drill them at your own pace.",
   },
   {
     title: "Examine",
-    href: "/examine",
+    href: "/library",
     body: "Sit a timed exam built from a lecture, get scored, and review detailed per-question feedback.",
   },
 ];
@@ -59,7 +61,7 @@ export default function Home() {
       <section className="grid gap-4 sm:grid-cols-2">
         {MODES.map((mode) => (
           <Link
-            key={mode.href}
+            key={mode.title}
             href={mode.href}
             className="group rounded-xl border border-black/10 bg-white/50 p-6 transition-colors hover:border-accent/40 dark:border-white/10 dark:bg-white/5"
           >

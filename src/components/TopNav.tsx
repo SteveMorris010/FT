@@ -1,10 +1,13 @@
 import Link from "next/link";
 
+// The four study modes always operate on a specific lecture, so the top-level
+// links point to the library where you pick a lecture first. The per-lecture
+// routes live at /lectures/[id]/{summarize,understand,practice,examine}.
 const MODES = [
-  { href: "/summarize", label: "Summarize" },
-  { href: "/understand", label: "Understand" },
-  { href: "/practice", label: "Practice" },
-  { href: "/examine", label: "Examine" },
+  { href: "/library", label: "Summarize" },
+  { href: "/library", label: "Understand" },
+  { href: "/library", label: "Practice" },
+  { href: "/library", label: "Examine" },
 ];
 
 /**
@@ -36,7 +39,7 @@ export default function TopNav() {
             </Link>
           </li>
           {MODES.map((mode) => (
-            <li key={mode.href}>
+            <li key={mode.label}>
               <Link
                 href={mode.href}
                 className="rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
