@@ -57,6 +57,21 @@ the app never crashes without one.
 
 ---
 
+## Quick start (easiest)
+
+In a hurry? Use the one-click launcher, which does all the setup below for you
+and then starts the app:
+
+- **Windows:** double-click **`start.bat`**.
+- **macOS / Linux:** run **`./start.sh`** from the project root.
+
+Then open [http://localhost:3000](http://localhost:3000). The launcher is safe to
+run repeatedly. See [QUICKSTART.md](QUICKSTART.md) for the short version. The rest
+of this section explains the same steps manually if you prefer to run them
+yourself.
+
+---
+
 ## Prerequisites
 
 - **[Node.js 22](https://nodejs.org/)** (or newer) and npm. Check with:
@@ -223,7 +238,13 @@ tests/                      Vitest unit tests (pptx parsing, AI fallback,
 | `npm start` | Run the production build (run `npm run build` first) |
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the unit tests once with Vitest |
+| `npm run setup` | Create/update the local SQLite database (applies migrations; safe to re-run) |
+| `npm run launch` | Run `setup` and then start the dev server (one-liner for terminal users) |
 | `postinstall` | Runs automatically after `npm install` to generate the Prisma client |
+
+> The cross-platform launchers `start.sh` (macOS/Linux) and `start.bat` (Windows)
+> wrap all of the first-run steps (install, `.env`, database) and then start the
+> app. See [QUICKSTART.md](QUICKSTART.md).
 
 ---
 

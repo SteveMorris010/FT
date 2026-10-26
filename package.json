@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "setup": "prisma migrate deploy",
+    "launch": "npm run setup && npm run dev",
     "postinstall": "prisma generate"
   },
   "dependencies": {
